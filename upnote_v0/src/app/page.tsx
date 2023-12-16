@@ -182,9 +182,11 @@ export default function Home() {
         <li
           key={note.id}
           onClick={() => selectNote(note)}
-          className="flex items-center"
+          className="flex items-center gap-2 "
         >
-          {note.title}
+          <div className="whitespace-nowrap overflow-hidden text-ellipsis">
+            {note.title}
+          </div>
           <Button onClick={() => deleteNote(note.id)}>
             {" "}
             <TrashIcon />

@@ -1,10 +1,9 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import Link from "next/link";
-import { SetStateAction, useEffect, useState } from "react";
+import { SetStateAction, useCallback, useEffect, useState } from "react";
 
 interface Note {
   id: number;
@@ -22,7 +21,6 @@ interface IconProps extends React.SVGProps<SVGSVGElement> {}
 
 export default function Note() {
   const [notebooks, setNotebooks] = useState<Notebook[]>([]);
-  const [notes, setNotes] = useState([]);
 
   const [selectedNotebook, setSelectedNotebook] = useState<Notebook | null>(
     null
@@ -83,41 +81,97 @@ export default function Note() {
     setSelectedNote(note);
   };
 
+  // 노트 내용 변경 핸들러
   const handleNoteChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    if (selectedNote) {
-      setSelectedNote({
-        ...selectedNote,
-        content: e.target.value,
-      });
+    const newContent = e.target.value;
+    if (selectedNote && selectedNotebook) {
+      const updatedNote = { ...selectedNote, content: newContent };
+      const updatedNotes = selectedNotebook.notes.map((note) =>
+        note.id === updatedNote.id ? updatedNote : note
+      );
+      const updatedNotebook = { ...selectedNotebook, notes: updatedNotes };
+      setSelectedNotebook(updatedNotebook);
+      setSelectedNote(updatedNote);
+      updateNotebook(updatedNotebook);
     }
   };
 
-  const updateNotebook = (updatedNotebook: {
-    notes?: any[] | Note[];
-    id: any;
-    title?: string;
-  }) => {
-    const updatedNotebooks = notebooks.map((nb) =>
-      nb.id === updatedNotebook.id ? updatedNotebook : nb
-    );
-    setNotebooks(updatedNotebooks as Notebook[]);
-    saveToLocalStorage(updatedNotebooks);
+  // 노트 제목 변경 핸들러
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newTitle = e.target.value;
+    if (selectedNote && selectedNotebook) {
+      const updatedNote = { ...selectedNote, title: newTitle };
+      const updatedNotes = selectedNotebook.notes.map((note) =>
+        note.id === updatedNote.id ? updatedNote : note
+      );
+      const updatedNotebook = { ...selectedNotebook, notes: updatedNotes };
+      setSelectedNotebook(updatedNotebook);
+      setSelectedNote(updatedNote);
+      updateNotebook(updatedNotebook);
+    }
   };
 
+  // 노트북 업데이트 함수
+  const updateNotebook = useCallback(
+    (updatedNotebook: Notebook) => {
+      setNotebooks((prevNotebooks) =>
+        prevNotebooks.map((nb) =>
+          nb.id === updatedNotebook.id ? updatedNotebook : nb
+        )
+      );
+      saveToLocalStorage(notebooks);
+    },
+    [notebooks]
+  );
+
+  // 노트북 내 노트 업데이트 및 저장
+  const updateNoteInNotebook = useCallback(
+    (updatedNote: Note) => {
+      if (selectedNotebook) {
+        const updatedNotes = selectedNotebook.notes.map((note) =>
+          note.id === updatedNote.id ? updatedNote : note
+        );
+        const updatedNotebook: Notebook = {
+          ...selectedNotebook,
+          notes: updatedNotes,
+        };
+        updateNotebook(updatedNotebook);
+      }
+    },
+    [selectedNotebook, updateNotebook]
+  );
+
   const updateNote = (updatedNote: { id: number }) => {
-    if (!selectedNotebook) return;
+    if (!selectedNotebook || !selectedNote) return;
+
     const updatedNotes = selectedNotebook.notes.map((note) =>
-      note.id === updatedNote.id ? updatedNote : note
+      note.id === updatedNote.id ? { ...selectedNote, ...updatedNote } : note
     );
-    const updatedNotebook = { ...selectedNotebook, notes: updatedNotes };
+
+    const updatedNotebook: Notebook = {
+      ...selectedNotebook,
+      notes: updatedNotes,
+    };
     updateNotebook(updatedNotebook);
   };
 
+  useEffect(() => {
+    if (selectedNote && selectedNotebook) {
+      updateNoteInNotebook(selectedNote);
+    }
+  }, [selectedNote, selectedNotebook, updateNoteInNotebook]); // 의존성 배열 수정
+
   const renderNotebooks = () => {
     return notebooks.map((nb) => (
-      <li key={nb.id} onClick={() => selectNotebook(nb)}>
+      <li
+        key={nb.id}
+        onClick={() => selectNotebook(nb)}
+        className="flex items-center"
+      >
         {nb.title}
-        <Button onClick={() => deleteNotebook(nb.id)}>Delete</Button>
+        <Button onClick={() => deleteNotebook(nb.id)}>
+          <TrashIcon />
+        </Button>
       </li>
     ));
   };
@@ -125,9 +179,16 @@ export default function Note() {
   const renderNotes = () => {
     return selectedNotebook ? (
       selectedNotebook.notes.map((note) => (
-        <li key={note.id} onClick={() => selectNote(note)}>
+        <li
+          key={note.id}
+          onClick={() => selectNote(note)}
+          className="flex items-center"
+        >
           {note.title}
-          <Button onClick={() => deleteNote(note.id)}>Delete</Button>
+          <Button onClick={() => deleteNote(note.id)}>
+            {" "}
+            <TrashIcon />
+          </Button>
         </li>
       ))
     ) : (
@@ -173,7 +234,13 @@ export default function Note() {
           <div className="flex-1 w-2/3 md:w-3/4">
             {selectedNote && (
               <div className="flex flex-col w-full gap-1.5">
-                <Label htmlFor="note-input">{selectedNote.title}</Label>
+                <input
+                  className="w-full dark:bg-gray-800/40"
+                  type="text"
+                  value={selectedNote.title}
+                  onChange={handleTitleChange}
+                  placeholder="Note Title"
+                />
                 <Textarea
                   className="w-full dark:bg-gray-800/40"
                   id="note-input"

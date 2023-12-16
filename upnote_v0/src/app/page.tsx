@@ -4,6 +4,7 @@ import { Button } from "@/app/ui/button";
 import { Textarea } from "@/app/ui/textarea";
 import Link from "next/link";
 import { SetStateAction, useCallback, useEffect, useState } from "react";
+import Editor from "@/app/components/NoteEditor";
 
 interface Note {
   id: number;
@@ -93,7 +94,6 @@ export default function Home() {
         content: newContent,
       };
 
-      // 나머지 로직은 동일하게 유지
       const updatedNotes = selectedNotebook.notes.map((note) =>
         note.id === updatedNote.id ? updatedNote : note
       );

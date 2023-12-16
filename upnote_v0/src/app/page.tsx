@@ -141,11 +141,11 @@ export default function Home() {
     [selectedNotebook, updateNotebook]
   );
 
-  const updateNote = (updatedNote: { id: number }) => {
+  const updateNote = (updatedNote: Note) => {
     if (!selectedNotebook || !selectedNote) return;
 
     const updatedNotes = selectedNotebook.notes.map((note) =>
-      note.id === updatedNote.id ? { ...selectedNote, ...updatedNote } : note
+      note.id === updatedNote.id ? updatedNote : note
     );
 
     const updatedNotebook: Notebook = {
@@ -155,11 +155,25 @@ export default function Home() {
     updateNotebook(updatedNotebook);
   };
 
+  const shouldUpdateNoteInNotebook = useCallback(
+    (note: Note) => selectedNote && note.id === selectedNote.id,
+    [selectedNote]
+  );
+
   useEffect(() => {
     if (selectedNote && selectedNotebook) {
-      updateNoteInNotebook(selectedNote);
+      const updatedNotes = selectedNotebook.notes.map((note) =>
+        shouldUpdateNoteInNotebook(note) ? { ...selectedNote, ...note } : note
+      );
+
+      const updatedNotebook = {
+        ...selectedNotebook,
+        notes: updatedNotes,
+      };
+      updateNotebook(updatedNotebook);
     }
-  }, [selectedNote, selectedNotebook, updateNoteInNotebook]); // 의존성 배열 수정
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedNote, selectedNotebook, shouldUpdateNoteInNotebook]);
 
   const renderNotebooks = () => {
     return notebooks.map((nb) => (

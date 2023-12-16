@@ -85,26 +85,20 @@ export default function Home() {
   const handleNoteChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newContent = e.target.value;
     if (selectedNote && selectedNotebook) {
-      const updatedNote = { ...selectedNote, content: newContent };
-      const updatedNotes = selectedNotebook.notes.map((note) =>
-        note.id === updatedNote.id ? updatedNote : note
-      );
-      const updatedNotebook = { ...selectedNotebook, notes: updatedNotes };
-      setSelectedNotebook(updatedNotebook);
-      setSelectedNote(updatedNote);
-      updateNotebook(updatedNotebook);
-    }
-  };
+      // 첫 번째 줄을 제목으로 설정
+      const firstLine = newContent.split("\n")[0];
+      const updatedNote = {
+        ...selectedNote,
+        title: firstLine,
+        content: newContent,
+      };
 
-  // 노트 제목 변경 핸들러
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newTitle = e.target.value;
-    if (selectedNote && selectedNotebook) {
-      const updatedNote = { ...selectedNote, title: newTitle };
+      // 나머지 로직은 동일하게 유지
       const updatedNotes = selectedNotebook.notes.map((note) =>
         note.id === updatedNote.id ? updatedNote : note
       );
       const updatedNotebook = { ...selectedNotebook, notes: updatedNotes };
+
       setSelectedNotebook(updatedNotebook);
       setSelectedNote(updatedNote);
       updateNotebook(updatedNotebook);
@@ -250,13 +244,6 @@ export default function Home() {
           <div className="flex-1 w-2/3 md:w-3/4">
             {selectedNote && (
               <div className="flex flex-col w-full gap-1.5">
-                <input
-                  className="w-full dark:bg-gray-800/40"
-                  type="text"
-                  value={selectedNote.title}
-                  onChange={handleTitleChange}
-                  placeholder="Note Title"
-                />
                 <Textarea
                   className="w-full dark:bg-gray-800/40"
                   id="note-input"

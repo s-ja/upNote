@@ -60,16 +60,20 @@ function EditorContent({ initialContent }: { initialContent: string }) {
   useEffect(() => {
     editor.update(() => {
       const root = $getRoot();
-      root.clear();
 
-      // 단락 노드를 생성하고 텍스트 노드를 포함시킴
-      const paragraphNode = $createParagraphNode();
-      paragraphNode.append($createTextNode(initialContent || ""));
+      // 루트 노드에 이미 컨텐츠가 있는지 확인
+      if (root.isEmpty()) {
+        root.clear();
 
-      // 단락 노드를 루트 노드에 추가
-      root.append(paragraphNode);
+        // 단락 노드를 생성하고 텍스트 노드를 포함시킴
+        const paragraphNode = $createParagraphNode();
+        paragraphNode.append($createTextNode(initialContent || ""));
+
+        // 단락 노드를 루트 노드에 추가
+        root.append(paragraphNode);
+      }
     });
-  }, [editor, initialContent]);
+  }, [editor]); // initialContent를 의존성 배열에서 제거
 
   return null;
 }

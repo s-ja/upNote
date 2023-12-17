@@ -1,7 +1,7 @@
 # upNote
 
 ```
-cd upNote_v0
+cd upnote_v0
 
 npm run dev
 ```

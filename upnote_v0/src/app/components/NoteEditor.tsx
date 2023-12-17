@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { $getRoot, $createTextNode } from "lexical";
+import { $getRoot, $createTextNode, $createParagraphNode } from "lexical";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import { PlainTextPlugin } from "@lexical/react/LexicalPlainTextPlugin";
@@ -23,18 +23,13 @@ const editorConfig = {
   namespace: "editor",
 };
 
-export default function Editor({ initialContent, onContentChange }: { initialContent: string, onContentChange: Function }) {
-  const [editor] = useLexicalComposerContext();
-
-  useEffect(() => {
-    editor.update(() => {
-      // 에디터의 초기 내용 설정
-      const root = $getRoot();
-      const textNode = $createTextNode(initialContent);
-      root.clear().append(textNode);
-    });
-  }, [editor, initialContent]);
-
+export default function Editor({
+  initialContent,
+  onContentChange,
+}: {
+  initialContent: string;
+  onContentChange: Function;
+}) {
   return (
     <LexicalComposer initialConfig={editorConfig}>
       <div className="editor-container w-full dark:bg-gray-800/40">
@@ -45,18 +40,38 @@ export default function Editor({ initialContent, onContentChange }: { initialCon
         />
         <HistoryPlugin />
         <OnChangePlugin
-          onChange={() => {
-            editor.getEditorState().read(() => {
-              // 에디터의 현재 내용을 가져오기
+          onChange={(editor) => {
+            const content = editor.read(() => {
               const root = $getRoot();
-              const currentContent = root.getTextContent();
-              onContentChange(currentContent);
+              return root.getTextContent();
             });
+            onContentChange(content);
           }}
         />
+        <EditorContent initialContent={initialContent} />
       </div>
     </LexicalComposer>
   );
+}
+
+function EditorContent({ initialContent }: { initialContent: string }) {
+  const [editor] = useLexicalComposerContext();
+
+  useEffect(() => {
+    editor.update(() => {
+      const root = $getRoot();
+      root.clear();
+
+      // 단락 노드를 생성하고 텍스트 노드를 포함시킴
+      const paragraphNode = $createParagraphNode();
+      paragraphNode.append($createTextNode(initialContent || ""));
+
+      // 단락 노드를 루트 노드에 추가
+      root.append(paragraphNode);
+    });
+  }, [editor, initialContent]);
+
+  return null;
 }
 
 function Placeholder() {

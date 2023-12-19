@@ -118,23 +118,6 @@ export default function Home() {
     [notebooks]
   );
 
-  // 노트북 내 노트 업데이트 및 저장
-  const updateNoteInNotebook = useCallback(
-    (updatedNote: Note) => {
-      if (selectedNotebook) {
-        const updatedNotes = selectedNotebook.notes.map((note) =>
-          note.id === updatedNote.id ? updatedNote : note
-        );
-        const updatedNotebook: Notebook = {
-          ...selectedNotebook,
-          notes: updatedNotes,
-        };
-        updateNotebook(updatedNotebook);
-      }
-    },
-    [selectedNotebook, updateNotebook]
-  );
-
   const updateNote = (updatedNote: Note) => {
     if (!selectedNotebook || !selectedNote) return;
 
